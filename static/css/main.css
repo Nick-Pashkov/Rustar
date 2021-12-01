@@ -1,0 +1,71 @@
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.grid {
+    display: grid;
+    grid-auto-flow: column;
+}
+
+.node {
+    width: 20px;
+    height: 20px;
+    background-color: #DADDFC;
+    box-shadow: 0 0 0 1px black;
+    position: relative;
+    transition: all ease-out 400ms;
+}
+
+.node.start {
+    background-color: green;
+}
+
+.node.target {
+    background-color: blue;
+}
+
+.node.path {
+    background-color: green;
+}
+
+.node.open {
+    background-color: yellowgreen;
+}
+
+.node.closed {
+    background-color: #F90716;
+}
+
+.node.wall {
+    transition: none;
+    background-color: #000;
+}
+
+.node span {
+    position: absolute;
+    margin: 2px;
+    display: none;
+}
+
+.node span.h {
+    top: 0;
+    left: 0;
+}
+
+.node span.g {
+    top: 0;
+    right: 0;
+}
+
+.node span.f {
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+}
