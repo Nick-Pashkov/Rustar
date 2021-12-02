@@ -51,7 +51,7 @@ body {
 .node span {
     position: absolute;
     margin: 2px;
-    display: none;
+    font-size: 10px;
 }
 
 .node span.h {
@@ -62,10 +62,12 @@ body {
 .node span.g {
     top: 0;
     right: 0;
+    display: none;
 }
 
 .node span.f {
     bottom: 0;
     width: 100%;
     text-align: center;
+    display: none;
 }

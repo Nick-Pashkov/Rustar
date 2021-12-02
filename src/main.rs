@@ -33,7 +33,7 @@ struct Model {
     target: Node,
     grid: Vec<Vec<Node>>,
     pos: Position2D,
-    //interval: Interval,
+    interval: Interval,
     open_list: Vec<Node>,
     closed_list: Vec<Node>,
     is_solved: bool,
@@ -75,10 +75,10 @@ impl Component for Model {
 
     fn create(ctx: &Context<Self>) -> Self {
 
-        let num_rows = 20;
-        let num_cols = 20;
-        let start_position: Position2D = (0, 0);
-        let target_position: Position2D = (18, 10);
+        let num_rows = 11;
+        let num_cols = 6;
+        let start_position: Position2D = (7, 4);
+        let target_position: Position2D = (4, 1);
 
         let mut grid: Vec<Vec<Node>> = Vec::new();
         for rows in 0..num_rows {
@@ -124,7 +124,7 @@ impl Component for Model {
             target,
             grid,
             pos: position,
-            //interval,
+            interval,
             open_list,
             closed_list,
             is_solved: false,
@@ -136,7 +136,7 @@ impl Component for Model {
         match msg {
             Msg::Tick => {
                 //console_log!(format!("Open List before {:?}", open_list));
-                if !self.is_solved {
+                if !self.is_solved && self.is_started {
                     self.is_solved = astar::algorithmV2(&mut self.grid, self.target, &mut self.pos, &mut self.open_list, &mut self.closed_list);
                     return true;
                 }
