@@ -34,7 +34,7 @@ pub struct Props {
     pub onclick: Callback<Position2D>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Node {
     pub x: i32,
     pub y: i32,
@@ -42,6 +42,7 @@ pub struct Node {
     pub g: i32,
     pub h: i32,
     pub came_from: Option<Position2D>,
+    pub parent: Option<Box<Node>>
 }
 
 impl Node {
@@ -65,6 +66,7 @@ impl Component for Node {
             g: 0,
             h: 0,
             came_from: None,
+            parent: None
         }
     }
 

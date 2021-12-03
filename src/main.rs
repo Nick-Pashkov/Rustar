@@ -75,10 +75,10 @@ impl Component for Model {
 
     fn create(ctx: &Context<Self>) -> Self {
 
-        let num_rows = 11;
-        let num_cols = 6;
-        let start_position: Position2D = (7, 4);
-        let target_position: Position2D = (4, 1);
+        let num_rows = 20;
+        let num_cols = 16;
+        let start_position: Position2D = (1, 3);
+        let target_position: Position2D = (17, 1);
 
         let mut grid: Vec<Vec<Node>> = Vec::new();
         for rows in 0..num_rows {
@@ -95,7 +95,8 @@ impl Component for Model {
                     state,
                     h: 0,
                     g: 0,
-                    came_from: None
+                    came_from: None,
+                    parent: None,
                 });
             }
             grid.push(vec_rows);
@@ -103,7 +104,7 @@ impl Component for Model {
 
         let interval = {
             let link = ctx.link().clone();
-            Interval::new(10, move || link.send_message(Msg::Tick))
+            Interval::new(1, move || link.send_message(Msg::Tick))
         };
 
         let start = grid[start_position.0 as usize][start_position.1 as usize].clone();
@@ -137,14 +138,19 @@ impl Component for Model {
             Msg::Tick => {
                 //console_log!(format!("Open List before {:?}", open_list));
                 if !self.is_solved && self.is_started {
-                    self.is_solved = astar::algorithmV2(&mut self.grid, self.target, &mut self.pos, &mut self.open_list, &mut self.closed_list);
+                    self.is_solved = astar::algorithmV2(&mut self.grid, self.target.clone(), &mut self.pos, &mut self.open_list, &mut self.closed_list).is_some();
                     return true;
                 }
                 //console_log!(format!("Open List after {:?}", open_list));
                 false
             },
             Msg::CreateWall(position) => {
-                self.grid[position.0 as usize][position.1 as usize].state = NodeState::Wall;
+                let mut node = &mut self.grid[position.0 as usize][position.1 as usize];
+                if node.state == NodeState::Wall {
+                    node.state = NodeState::None;
+                } else {
+                    node.state = NodeState::Wall;
+                }
                 true
             },
             Msg::ToggleStart => {
@@ -153,16 +159,19 @@ impl Component for Model {
             }
         }
     }
+    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
+        //ctx.link().send_message(Msg::Tick)
+    }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
 
-        let start = ctx.link().callback(|_| Msg::ToggleStart);
-        let step = ctx.link().callback(|_| Msg::Tick);
+        //let start = ctx.link().callback(|_| Msg::ToggleStart);
+        //let step = ctx.link().callback(|_| Msg::Tick);
 
         html! {
             <>
-                <button onclick={start}>{if self.is_started {"Stop"} else {"Start"}}</button>
-                <button onclick={step}>{{"+1"}}</button>
+                //<button onclick={start}>{if self.is_started {"Stop"} else {"Start"}}</button>
+                //<button onclick={step}>{{"+1"}}</button>
                 <div class="grid" style={format!("grid-template-columns: repeat({}, 1fr); grid-template-rows: repeat({}, 1fr);", self.dimensions.0, self.dimensions.1)}>
                     { self.render_grid(ctx) }
                 </div>
