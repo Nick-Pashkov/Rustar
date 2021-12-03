@@ -165,16 +165,18 @@ impl Component for Model {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
 
-        //let start = ctx.link().callback(|_| Msg::ToggleStart);
-        //let step = ctx.link().callback(|_| Msg::Tick);
+        let start = ctx.link().callback(|_| Msg::ToggleStart);
 
         html! {
             <>
-                //<button onclick={start}>{if self.is_started {"Stop"} else {"Start"}}</button>
-                //<button onclick={step}>{{"+1"}}</button>
-                <div class="grid" style={format!("grid-template-columns: repeat({}, 1fr); grid-template-rows: repeat({}, 1fr);", self.dimensions.0, self.dimensions.1)}>
-                    { self.render_grid(ctx) }
+                <div class="buttons">
+                    <button onclick={start}>{if self.is_started {"Stop"} else {"Start"}}</button>
                 </div>
+                <main>
+                    <div class="grid" style={format!("grid-template-columns: repeat({}, 1fr); grid-template-rows: repeat({}, 1fr);", self.dimensions.0, self.dimensions.1)}>
+                        { self.render_grid(ctx) }
+                    </div>
+                </main>
             </>
         }
     }
