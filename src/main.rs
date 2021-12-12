@@ -1,18 +1,23 @@
 use yew::prelude::*;
-use weblog::console_log;
-use gloo::timers::callback::Interval;
+use web_sys::HtmlInputElement;
+use chrono::Utc;
 
 mod node;
 use node::Node;
 
 mod astar;
+mod grid;
+use grid::Grid;
 
 pub type Position2D = (i32, i32);
 
 enum Msg {
-    Tick,
-    CreateWall(Position2D),
-    ToggleStart
+    ToggleStart,
+    SetDimensions(usize, i32),
+    SetPlacingMode(PlaceMode),
+    SetStart(Position2D),
+    SetTarget(Position2D),
+    SetTime(i64),
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -27,157 +32,148 @@ pub enum NodeState {
     Wall
 }
 
-struct Model {
-    dimensions: Position2D,
-    start: Node,
-    target: Node,
-    grid: Vec<Vec<Node>>,
-    pos: Position2D,
-    interval: Interval,
-    open_list: Vec<Node>,
-    closed_list: Vec<Node>,
-    is_solved: bool,
-    is_started: bool,
+#[derive(PartialEq, Clone, Copy)]
+pub enum PlaceMode {
+    Start,
+    Target,
+    Wall,
+    None
 }
 
-impl Model {
-    fn render_grid(&self, ctx: &Context<Self>) -> Html {
-        let grid = &self.grid;
-
-        let mut nodes: Vec<Html> = Vec::new();
-
-        for x in 0..(self.dimensions.0) {
-            for y in 0..self.dimensions.1 {
-                let cur_node = &grid[x as usize][y as usize];
-                let create_wall = ctx.link().callback(|(x, y)| Msg::CreateWall((x, y)));
-                nodes.push(html!{
-                    
-                    <Node
-                        key={x+1*y+1}
-                        x={x}
-                        y={y}
-                        state={cur_node.state.clone()}
-                        h={cur_node.h}
-                        g={cur_node.g}
-                        onclick={create_wall}
-                    />
-                })
-            }
-        }
-
-        nodes.into_iter().collect::<Html>()
-    }
+struct Model {
+    is_started: bool,
+    pub rows: i32,
+    pub cols: i32,
+    pub place_mode: PlaceMode,
+    pos_start: Position2D,
+    pos_target: Position2D,
+    time_start: i64,
+    time_end: i64,
 }
 
 impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
-
-        let num_rows = 20;
-        let num_cols = 16;
-        let start_position: Position2D = (1, 3);
-        let target_position: Position2D = (17, 1);
-
-        let mut grid: Vec<Vec<Node>> = Vec::new();
-        for rows in 0..num_rows {
-            let mut vec_rows: Vec<Node> = Vec::new();
-            for cols in 0..num_cols {
-
-                let state = if rows == start_position.0 && cols == start_position.1 { NodeState::Start }
-                    else if rows == target_position.0 && cols == target_position.1 { NodeState::Target }
-                    else { NodeState::None };
-
-                vec_rows.push(Node {
-                    x: rows,
-                    y: cols,
-                    state,
-                    h: 0,
-                    g: 0,
-                    came_from: None,
-                    parent: None,
-                });
-            }
-            grid.push(vec_rows);
-        }
-
-        let interval = {
+    fn create(_ctx: &Context<Self>) -> Self {
+        /*let interval = {
             let link = ctx.link().clone();
             Interval::new(1, move || link.send_message(Msg::Tick))
-        };
-
-        let start = grid[start_position.0 as usize][start_position.1 as usize].clone();
-        let target = grid[target_position.0 as usize][target_position.1 as usize].clone();
-        // Create open List
-        let mut open_list: Vec<Node> = Vec::new();
-        // Create closed List
-        let closed_list: Vec<Node> = Vec::new();
-
-        // Add start to open list
-        open_list.push(start.clone());
-
-        let position = (start.x, start.y);
+        };*/
 
         Self {
-            dimensions: (num_rows, num_cols),
-            start,
-            target,
-            grid,
-            pos: position,
-            interval,
-            open_list,
-            closed_list,
-            is_solved: false,
-            is_started: false
+            is_started: false,
+            rows: 10,
+            cols: 10,
+            place_mode: PlaceMode::None,
+            pos_start: (0, 0),
+            pos_target: (9, 9),
+            time_start: 0,
+            time_end: 0,
         }
     }
 
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::Tick => {
-                //console_log!(format!("Open List before {:?}", open_list));
-                if !self.is_solved && self.is_started {
-                    self.is_solved = astar::algorithmV2(&mut self.grid, self.target.clone(), &mut self.pos, &mut self.open_list, &mut self.closed_list).is_some();
-                    return true;
-                }
-                //console_log!(format!("Open List after {:?}", open_list));
-                false
+            Msg::ToggleStart => {
+                self.is_started = !self.is_started;
+                self.time_start = Utc::now().timestamp_millis();
+                true
             },
-            Msg::CreateWall(position) => {
-                let mut node = &mut self.grid[position.0 as usize][position.1 as usize];
-                if node.state == NodeState::Wall {
-                    node.state = NodeState::None;
+            Msg::SetDimensions(which, dimension) => {
+                if which == 0 {
+                    self.rows = dimension;
                 } else {
-                    node.state = NodeState::Wall;
+                    self.cols = dimension;
                 }
                 true
             },
-            Msg::ToggleStart => {
-                self.is_started = !self.is_started;
+            Msg::SetPlacingMode(mode) => {
+                self.place_mode = mode;
+                true
+            },
+            Msg::SetStart(position) => {
+                self.pos_start = position;
+                true
+            },
+            Msg::SetTarget(position) => {
+                self.pos_target = position;
+                true
+            },
+            Msg::SetTime(time) => {
+                self.time_end = time;
                 true
             }
         }
     }
-    fn rendered(&mut self, ctx: &Context<Self>, first_render: bool) {
-        //ctx.link().send_message(Msg::Tick)
-    }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
 
-        let start = ctx.link().callback(|_| Msg::ToggleStart);
+        let link = ctx.link();
+
+        let start = link.callback(|_| Msg::ToggleStart);
+
+        let on_input_rows = link.callback(|e: Event| {
+            Msg::SetDimensions(0, e.target_unchecked_into::<HtmlInputElement>().value().parse().unwrap())
+        });
+
+        let on_input_cols = link.callback(|e: Event| {
+            Msg::SetDimensions(1, e.target_unchecked_into::<HtmlInputElement>().value().parse().unwrap())
+        });
+
+        let placemode = self.place_mode;
+
+        let on_setstart = link.callback(|(x, y)| Msg::SetStart((x, y)));
+        let on_settarget = link.callback(|(x, y)| Msg::SetTarget((x, y)));
+
+        let on_solved = link.callback(|time| Msg::SetTime(time));
 
         html! {
-            <>
-                <div class="buttons">
-                    <button onclick={start}>{if self.is_started {"Stop"} else {"Start"}}</button>
-                </div>
-                <main>
-                    <div class="grid" style={format!("grid-template-columns: repeat({}, 1fr); grid-template-rows: repeat({}, 1fr);", self.dimensions.0, self.dimensions.1)}>
-                        { self.render_grid(ctx) }
+            <div class="app">
+                <div class="options">
+                    <div class="field">
+                        <label for="rows">{"Rows"}</label>
+                        <input type="number" id="rows" value={self.rows.to_string()} onchange={on_input_rows} />
                     </div>
-                </main>
-            </>
+                    <div class="field">
+                        <label for="cols">{"Columns"}</label>
+                        <input type="number" id="cols" value={self.cols.to_string()} onchange={on_input_cols} />
+                    </div>
+                    <div class="field">
+                        <label for="place-start">{"Place Start"}</label>
+                        <input name="place" type="radio" id="place-start"
+                            onchange={link.callback(|_| Msg::SetPlacingMode(PlaceMode::Start))}
+                            checked={placemode == PlaceMode::Start}
+                        />
+                        <br />
+                        <label for="place-target">{"Place Target"}</label>
+                        <input name="place" type="radio" id="place-target"
+                            onchange={link.callback(|_| Msg::SetPlacingMode(PlaceMode::Target))}
+                            checked={placemode == PlaceMode::Target}
+                        />
+                        <br />
+                        <label for="place-wall">{"Place Wall"}</label>
+                        <input name="place" type="radio" id="place-wall"
+                            onchange={link.callback(|_| Msg::SetPlacingMode(PlaceMode::Wall))}
+                            checked={placemode == PlaceMode::Wall}
+                        />
+                    </div>
+                    <button onclick={start}>{if self.is_started {"Stop"} else {"Start"}}</button>
+                    <p>{self.time_end - self.time_start}</p>
+                </div>
+                <div class="grid-ph">
+                    <Grid
+                        dimensions={(self.rows, self.cols)}
+                        start={self.pos_start}
+                        target={self.pos_target}
+                        is_started={self.is_started}
+                        place_mode={placemode}
+                        on_setstart={on_setstart}
+                        on_settarget={on_settarget}
+                        on_solved={on_solved}
+                    />
+                </div>
+            </div>
         }
     }
 }

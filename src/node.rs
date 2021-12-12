@@ -1,19 +1,7 @@
 use yew::prelude::*;
-use weblog::console_log;
 
 use crate::Position2D;
 use crate::NodeState;
-/*
-fn calculate_h(position: Position2D, target: Position2D) -> i32 {
-    let a = (target.0 - position.0).abs();
-    let b = (target.1 - position.1).abs();
-    a + b
-}
-
-fn calculate_g(position: Position2D, start: Position2D) -> i32 {
-    (position.0 - start.0).abs() + (position.1 - start.1).abs()
-}
-*/
 
 pub enum Msg {
     OnClick
@@ -57,12 +45,12 @@ impl Component for Node {
 
     fn create(ctx: &Context<Self>) -> Self {
 
-        let Props { x, y, state, .. } = ctx.props();
+        let Props { x, y, state, .. } = *ctx.props();
 
         Self {
-            x: *x,
-            y: *y,
-            state: *state,
+            x: x,
+            y: y,
+            state: state,
             g: 0,
             h: 0,
             came_from: None,
@@ -81,7 +69,7 @@ impl Component for Node {
 
     fn view(&self, ctx: &Context<Self>) -> Html {
 
-        let Props { state, g, h, x, y, .. } = *ctx.props();
+        let Props { state, .. } = *ctx.props();
 
         let mut status = "";
         if state == NodeState::Start { status = "start" }
@@ -97,19 +85,7 @@ impl Component for Node {
         let onclick = ctx.link().callback(move |_| Msg::OnClick);
 
         html! {
-            <div class={classes} onclick={onclick}>
-                {if g != 0 {
-                    html! {<span class="g">{g}</span>}
-                }else {html!{}}}
-
-                {if h != 0 {
-                    html! {<span class="h">{h}</span>}
-                }else {html!{}}}
-
-                {if g != 0 && h != 0 {
-                    html! {<span class="f">{g + h}</span>}
-                }else {html!{}}}
-            </div>
+            <div class={classes} onclick={onclick} />
         }
     }
 }

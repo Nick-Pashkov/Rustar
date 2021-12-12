@@ -1,16 +1,31 @@
+@font-face {
+    font-family: Proggy;
+    src: url('../ProggyVector.ttf');
+}
+
 html, body {
     margin: 0;
     height: 100%;
 }
-main {
+
+* {
+    font-family: Proggy, monospace;
+}
+
+div.app {
+    height: 100%;
+    display: flex;
+}
+
+div.options {
+    width: 50%;
+}
+
+div.grid-ph {
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-.buttons {
-    padding: 20px;
-    text-align: center;
+    width: 50%;
 }
 
 .grid {
@@ -19,12 +34,13 @@ main {
 }
 
 .node {
-    width: 20px;
-    height: 20px;
-    background-color: #DADDFC;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.7);
+    width: 40px;
+    height: 40px;
+    background-color: rgb(218, 221, 252);
+    box-shadow: 0 0 2px 1px rgba(0,0,0,0.7);
     position: relative;
     transition: all ease-out 400ms;
+    border-radius: 2px;
 }
 
 .node.start {
@@ -40,11 +56,11 @@ main {
 }
 
 .node.open {
-    background-color: yellowgreen;
+    background-color: rgba(154, 205, 50, 0.5)
 }
 
 .node.closed {
-    background-color: #F90716;
+    background-color: rgba(154, 205, 50, 0.8)
 }
 
 .node.wall {
@@ -56,7 +72,6 @@ main {
     position: absolute;
     margin: 2px;
     font-size: 10px;
-    display: none;
 }
 
 .node span.h {
